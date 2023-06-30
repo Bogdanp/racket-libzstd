@@ -24,6 +24,9 @@
 (define-zstd ZSTD_isError (_fun _size -> _int))
 (define-zstd ZSTD_defaultCLevel (_fun -> _int))
 
+(define ZSTD_CONTENTSIZE_UNKNOWN #xFFFFFFFFFFFFFFFF)
+(define ZSTD_CONTENTSIZE_ERROR   #xFFFFFFFFFFFFFFFE)
+
 (define default-compression-level (ZSTD_defaultCLevel))
 
 (define (error? code)
@@ -38,7 +41,12 @@
       (oops who len-or-code))))
 
 (define (get-content-size src)
-  (check 'ZSTD_getFrameContentSize (ZSTD_getFrameContentSize src (bytes-length src))))
+  (define len
+    (ZSTD_getFrameContentSize src (bytes-length src)))
+  (cond
+    [(= len ZSTD_CONTENTSIZE_UNKNOWN) #f]
+    [(= len ZSTD_CONTENTSIZE_ERROR) (check 'ZSTD_getFrameContentSize len)]
+    [else len]))
 
 (define (zstd-compress! src dst [level default-compression-level])
   (check 'ZSTD_compress (ZSTD_compress dst (bytes-length dst) src (bytes-length src) level)))
@@ -50,6 +58,11 @@
   (define dst (make-bytes (ZSTD_compressBound (bytes-length src))))
   (subbytes dst 0 (zstd-compress! src dst level)))
 
-(define (zstd-decompress src)
-  (define dst (make-bytes (get-content-size src)))
+(define (zstd-decompress src [max-decompressed-size #f])
+  (define len (or (get-content-size src) max-decompressed-size))
+  (unless len
+    (error 'zstd-decompress "unable to determine decompressed size"))
+  (when (and max-decompressed-size (> len max-decompressed-size))
+    (error 'zstd-decompress "decompressed length (~a) exceeds max size (~a)" len max-decompressed-size))
+  (define dst (make-bytes len))
   (subbytes dst 0 (zstd-decompress! src dst)))
