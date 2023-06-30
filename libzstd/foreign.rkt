@@ -32,22 +32,24 @@
 (define (oops who code)
   (error who (bytes->string/utf-8 (ZSTD_getErrorName code))))
 
+(define (check who len-or-code)
+  (begin0 len-or-code
+    (when (error? len-or-code)
+      (oops who len-or-code))))
+
+(define (get-content-size src)
+  (check 'ZSTD_getFrameContentSize (ZSTD_getFrameContentSize src (bytes-length src))))
+
 (define (zstd-compress! src dst [level default-compression-level])
-  (define len (ZSTD_compress dst (bytes-length dst) src (bytes-length src) level))
-  (begin0 len
-    (when (error? len)
-      (oops 'ZSTD_compress len))))
+  (check 'ZSTD_compress (ZSTD_compress dst (bytes-length dst) src (bytes-length src) level)))
 
 (define (zstd-decompress! src dst)
-  (define len (ZSTD_decompress dst (bytes-length dst) src (bytes-length src)))
-  (begin0 len
-    (when (error? len)
-      (oops 'ZSTD_decompress len))))
+  (check 'ZSTD_decompress (ZSTD_decompress dst (bytes-length dst) src (bytes-length src))))
 
 (define (zstd-compress src [level default-compression-level])
   (define dst (make-bytes (ZSTD_compressBound (bytes-length src))))
   (subbytes dst 0 (zstd-compress! src dst level)))
 
 (define (zstd-decompress src)
-  (define dst (make-bytes (ZSTD_getFrameContentSize src (bytes-length src))))
+  (define dst (make-bytes (get-content-size src)))
   (subbytes dst 0 (zstd-decompress! src dst)))
