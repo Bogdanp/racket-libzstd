@@ -21,7 +21,7 @@
 (define-zstd ZSTD_decompress (_fun _bytes _size _bytes _size -> _size))
 (define-zstd ZSTD_getFrameContentSize (_fun _bytes _size -> _size))
 (define-zstd ZSTD_getErrorName (_fun _size -> _bytes/nul-terminated))
-(define-zstd ZSTD_isError (_fun _size -> _int))
+(define-zstd ZSTD_isError (_fun _size -> _bool))
 (define-zstd ZSTD_defaultCLevel (_fun -> _int))
 
 (define ZSTD_CONTENTSIZE_UNKNOWN #xFFFFFFFFFFFFFFFF)
@@ -29,15 +29,12 @@
 
 (define default-compression-level (ZSTD_defaultCLevel))
 
-(define (error? code)
-  (= 1 (ZSTD_isError code)))
-
 (define (oops who code)
   (error who (bytes->string/utf-8 (ZSTD_getErrorName code))))
 
 (define (check who len-or-code)
   (begin0 len-or-code
-    (when (error? len-or-code)
+    (when (ZSTD_isError len-or-code)
       (oops who len-or-code))))
 
 (define (get-content-size src)
