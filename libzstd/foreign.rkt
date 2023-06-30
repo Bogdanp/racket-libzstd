@@ -1,7 +1,9 @@
 #lang racket/base
 
-(require ffi/unsafe
-         ffi/unsafe/define)
+(require (for-syntax racket/base)
+         ffi/unsafe
+         ffi/unsafe/define
+         racket/runtime-path)
 
 (provide
  zstd-compress!
@@ -9,7 +11,10 @@
  zstd-compress
  zstd-decompress)
 
-(define-ffi-definer define-zstd (ffi-lib "libzstd"))
+(define-runtime-path libzstd.so
+  '(so "libzstd"))
+
+(define-ffi-definer define-zstd (ffi-lib libzstd.so))
 
 (define-zstd ZSTD_compress (_fun _bytes _size _bytes _size _int -> _size))
 (define-zstd ZSTD_compressBound (_fun _size -> _size))
