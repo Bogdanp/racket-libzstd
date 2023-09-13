@@ -46,7 +46,7 @@ jobs:
             distarch: i386
           - arch: x86_64
             msystem: mingw64
-            distarch: x86_64
+            distarch: x86-64
     defaults:
       run:
         shell: msys2 {0}
