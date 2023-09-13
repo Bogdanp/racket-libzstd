@@ -34,6 +34,49 @@ jobs:
           name: macos-x86-64
           path: artifacts/macos-x86-64
 
+  # Adapted from https://github.com/facebook/zstd/blob/823b32ce430cd21706a5ffb5bd9e2e6297d919cc/.github/workflows/windows-artifacts.yml
+  build-win32:
+    name: build on Windows ${{ matrix.arch }}
+    runs-on: windows-2019
+    strategy:
+      matrix:
+        include:
+          - arch: i686
+            msystem: mingw32
+            distarch: i386
+          - arch: x86_64
+            msystem: mingw64
+            distarch: x86_64
+    defaults:
+      run:
+        shell: msys2 {0}
+        working-directory: zstd
+    steps:
+      - uses: actions/checkout@master
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          install: make zlib git p7zip mingw-w64-${{matrix.arch}}-gcc
+          update: true
+      - name: Getting submodule
+        run: |
+          git submodule update --init
+      - name: Building zlib to static link
+        run: |
+          git clone --depth 1 --branch v1.2.11 https://github.com/madler/zlib
+          make -C zlib -f win32/Makefile.gcc libz.a
+      - name: Building zstd programs
+        run: |
+          CPPFLAGS=-I../zlib LDFLAGS=../zlib/libz.a make -j allzstd MOREFLAGS=-static V=1
+      - name: Create artifacts
+        run: |
+          mkdir -p ../artifacts/win32-${{ matrix.distarch }}
+          cp lib/dll/libzstd.dll ../artifacts/win32-${{ matrix.distarch }}/libzstd.dll
+      - uses: actions/upload-artifact@v1
+        with:
+          name: win32-${{ matrix.distarch }}
+          path: artifacts/win32-${{ matrix.distarch }}
+
   deploy:
     name: deploy
     needs: [build-linux, build-macos-aarch64, build-macos-x86-64]
@@ -52,6 +95,14 @@ jobs:
         with:
           name: macos-x86-64
           path: artifacts/macos-x86-64
+      - uses: actions/download-artifact@v1
+        with:
+          name: win32-i386
+          path: artifacts/win32-i386
+      - uses: actions/download-artifact@v1
+        with:
+          name: win32-x86-64
+          path: artifacts/win32-x86-64
       - run: bin/deploy.sh
         if: >-
           startsWith(github.ref, 'refs/tags/v')
