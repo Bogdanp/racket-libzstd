@@ -3,11 +3,11 @@ name: build
 jobs:
   build-linux-aarch64:
     name: build on Ubuntu aarch64
-    runs-on: ['self-hosted', 'Linux', 'ARM64']
+    runs-on: ubuntu-20.04-arm
     steps:
       - uses: actions/checkout@master
       - run: bin/build-linux-aarch64.sh
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-aarch64
           path: artifacts/linux-aarch64
@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - run: bin/build-linux-x86-64.sh
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-x86-64
           path: artifacts/linux-x86-64
@@ -29,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - run: arch -arm64 bin/build-macos-aarch64.sh
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         with:
           name: macos-aarch64
           path: artifacts/macos-aarch64
@@ -40,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - run: bin/build-macos-x86-64.sh
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         with:
           name: macos-x86-64
           path: artifacts/macos-x86-64
@@ -83,7 +83,7 @@ jobs:
         run: |
           mkdir -p ../artifacts/win32-${{ matrix.distarch }}/lib/
           cp lib/dll/libzstd.dll ../artifacts/win32-${{ matrix.distarch }}/lib/libzstd.dll
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4
         with:
           name: win32-${{ matrix.distarch }}
           path: artifacts/win32-${{ matrix.distarch }}
@@ -94,27 +94,27 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@master
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
           name: linux-aarch64
           path: artifacts/linux-aarch64
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
           name: linux-x86-64
           path: artifacts/linux-x86-64
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
           name: macos-aarch64
           path: artifacts/macos-aarch64
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
           name: macos-x86-64
           path: artifacts/macos-x86-64
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
           name: win32-i386
           path: artifacts/win32-i386
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v4
         with:
           name: win32-x86-64
           path: artifacts/win32-x86-64
