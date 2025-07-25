@@ -48,7 +48,7 @@ jobs:
   # Adapted from https://github.com/facebook/zstd/blob/823b32ce430cd21706a5ffb5bd9e2e6297d919cc/.github/workflows/windows-artifacts.yml
   build-win32:
     name: build on Windows ${{ matrix.arch }}
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       matrix:
         include:
